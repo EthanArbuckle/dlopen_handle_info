@@ -91,19 +91,6 @@ static struct mach_header_64 *dyld_header()
     return mh;
 }
 
-void *private_dlsym(void *handle, char *symbol)
-{
-    if (handle == NULL || symbol == NULL)
-    {
-        return NULL;
-    }
-    
-    void *getHeader = addr_of_symbol(dyld_header(), "__ZNK16ImageLoaderMachO10machHeaderEv");
-    struct mach_header_64 *mh = ((struct mach_header_64 * (*)(void *))getHeader)(handle);
-    
-    return addr_of_symbol(mh, symbol);
-}
-
 struct mach_header_64 *get_mach_header(void *handle)
 {
     return ((struct mach_header_64 * (*)(void *))addr_of_symbol(dyld_header(), "__ZNK16ImageLoaderMachO10machHeaderEv"))(handle);
@@ -117,4 +104,14 @@ char *get_real_path(void *handle)
 int in_shared_cache(void *handle)
 {
     return ((int (*) (void *))addr_of_symbol(dyld_header(), "__ZNK20ImageLoaderMegaDylib13inSharedCacheEv"))(handle);
+}
+
+void *private_dlsym(void *handle, char *symbol)
+{
+    if (handle == NULL || symbol == NULL)
+    {
+        return NULL;
+    }
+
+    return addr_of_symbol(get_mach_header(handle), symbol);
 }
